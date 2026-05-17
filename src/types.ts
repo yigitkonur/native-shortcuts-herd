@@ -61,6 +61,7 @@ export interface ApplyRequest {
   choices: ShortcutChoices;
   dryRun: boolean;
   yes: boolean;
+  installHerdr?: boolean;
   ghosttyConfigPaths?: string[];
   skipGhostty?: boolean;
   skipHerdr?: boolean;

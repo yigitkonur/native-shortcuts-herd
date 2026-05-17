@@ -5,6 +5,7 @@ import pc from "picocolors";
 import { choicesFromOptions, getProfile, profiles, targetFrom } from "./profiles.js";
 import { applyConfig, diffConfig, diffRevert, doctor, revertConfig } from "./installer.js";
 import { formatDiff, jsonError, jsonOk, printHuman } from "./format.js";
+import { detectHerdr, minimumHerdrVersion } from "./herdr.js";
 import type { Change, ShortcutChoices } from "./types.js";
 
 const program = new Command();
@@ -12,13 +13,15 @@ const program = new Command();
 program
   .name("native-shortcuts-herd")
   .description("make ghostty + herdr navigation feel native to macos")
-  .version("0.1.0");
+  .version("0.1.1");
 
 addSharedOptions(program.command("install"))
   .description("run the guided installer")
   .action(async (options) => {
     await run(async () => {
+      const wizard = await promptForInstall(options);
       const choices = await promptForChoices(options);
+      options.installHerdr = wizard.installHerdr;
       const result = await applyConfig(toApplyRequest(choices, options));
       outputResult("installed native shortcuts", result, options);
     }, options);
@@ -189,6 +192,41 @@ async function promptForChoices(options: Record<string, unknown>): Promise<Short
   };
 }
 
+async function promptForInstall(options: Record<string, unknown>): Promise<{ installHerdr: boolean }> {
+  if (
+    options.yes ||
+    options.dryRun ||
+    options.skipHerdr ||
+    options.skipHerdrInstall ||
+    !process.stdin.isTTY
+  ) {
+    return { installHerdr: false };
+  }
+
+  const herdr = detectHerdr();
+  if (herdr.ok) return { installHerdr: false };
+
+  const message = herdr.path
+    ? `herdr ${herdr.version ?? "unknown"} is installed; update to ${minimumHerdrVersion}+ now?`
+    : "herdr is not installed; install it now?";
+  const detail = herdr.path
+    ? "downloads the latest herdr release into ~/.local/bin/herdr"
+    : "downloads herdr into ~/.local/bin/herdr so the shortcuts have a target";
+
+  const answer = await prompts(
+    {
+      type: "confirm",
+      name: "installHerdr",
+      message,
+      initial: true,
+      hint: detail
+    },
+    { onCancel: () => process.exit(130) }
+  );
+
+  return { installHerdr: Boolean(answer.installHerdr) };
+}
+
 function targetChoices(): Array<{ title: string; value: string; description: string }> {
   return [
     { title: "spaces", value: "workspaces", description: "herdr workspaces / spaces" },
@@ -202,6 +240,7 @@ function toApplyRequest(choices: ShortcutChoices, options: Record<string, unknow
     choices,
     dryRun: Boolean(options.dryRun),
     yes: Boolean(options.yes),
+    installHerdr: Boolean(options.installHerdr),
     ghosttyConfigPaths: options.ghosttyConfig as string[] | undefined,
     skipGhostty: Boolean(options.skipGhostty),
     skipHerdr: Boolean(options.skipHerdr),

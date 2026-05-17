@@ -24,7 +24,7 @@ import {
 import { readState, writeState } from "./state.js";
 import type { ApplyRequest, Change, CommandResult, ManagedState, ShortcutChoices } from "./types.js";
 
-const packageVersion = "0.1.0";
+const packageVersion = "0.1.1";
 
 export async function applyConfig(request: ApplyRequest): Promise<CommandResult> {
   const generated = generateConfig(request.choices);
@@ -39,11 +39,11 @@ export async function applyConfig(request: ApplyRequest): Promise<CommandResult>
       const message = herdr.path
         ? `herdr ${herdr.version ?? "unknown"} found, ${minimumHerdrVersion}+ recommended`
         : "herdr not found";
-      if (!request.skipHerdrInstall && request.yes && !request.dryRun) {
+      if (!request.skipHerdrInstall && (request.yes || request.installHerdr) && !request.dryRun) {
         const installed = await installOrUpdateHerdr();
         warnings.push(`${message}; installed ${installed}`);
       } else {
-        warnings.push(`${message}; run with --yes to install/update automatically`);
+        warnings.push(`${message}; rerun install and accept the herdr install prompt, or use --yes`);
       }
     }
 

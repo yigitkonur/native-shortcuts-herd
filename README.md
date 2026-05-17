@@ -18,6 +18,8 @@ npx native-shortcuts-herd install
 
 the installer is reusable. run it again any time to switch profiles, change what `cmd+1..9` targets, update mappings, repair config drift, or revert cleanly.
 
+if herdr is missing or too old, the wizard offers to install/update it into `~/.local/bin/herdr` before writing the keymap. non-interactive runs can use `--yes` for the same behavior.
+
 ## why this exists
 
 terminal power users already know how to build custom keymaps. the problem is that every terminal, multiplexer, and tui app has its own idea of what "tab", "space", and "pane" means.
@@ -42,6 +44,7 @@ ghostty already has excellent keybinding support. herdr already has workspaces, 
 | ghostty | adds one managed `config-file` include to your existing config |
 | ghostty sidecar | writes only owned keybind routes into `~/.config/native-shortcuts-herd/ghostty.conf` |
 | herdr | updates `[keys]`, `[keys.indexed]`, and `ui.prompt_new_tab_name` |
+| herdr installer | prompts to install/update herdr when it is missing or below `0.5.10` |
 | state | stores install state in `~/.config/native-shortcuts-herd/state.json` |
 | backups | creates timestamped backups before writing |
 | revert | removes the ghostty sidecar/include and restores tracked herdr values |
