@@ -1,0 +1,59 @@
+{
+  "name": "native-shortcuts-herd",
+  "version": "0.1.0",
+  "description": "make ghostty + herdr navigation feel native to macos and chrome-style tab workflows",
+  "type": "module",
+  "bin": {
+    "native-shortcuts-herd": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "postbuild": "node -e \"require('fs').chmodSync('dist/cli.js', 0o755)\"",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepack": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yigitkonur/native-shortcuts-herd.git"
+  },
+  "keywords": [
+    "ghostty",
+    "herdr",
+    "macos",
+    "terminal",
+    "cli",
+    "keybindings",
+    "shortcuts"
+  ],
+  "author": "yigitkonur",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yigitkonur/native-shortcuts-herd/issues"
+  },
+  "homepage": "https://github.com/yigitkonur/native-shortcuts-herd#readme",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "commander": "^14.0.2",
+    "picocolors": "^1.1.1",
+    "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "@types/prompts": "^2.4.9",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.13"
+  }
+}
