@@ -24,7 +24,7 @@ import {
 import { deleteState, readState, writeState } from "./state.js";
 import type { ApplyRequest, Change, CommandResult, ManagedState, ShortcutChoices } from "./types.js";
 
-const packageVersion = "0.1.3";
+const packageVersion = "0.1.4";
 
 export async function applyConfig(request: ApplyRequest): Promise<CommandResult> {
   const generated = generateConfig(request.choices);

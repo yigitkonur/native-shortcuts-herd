@@ -13,7 +13,7 @@ const program = new Command();
 program
   .name("native-shortcuts-herd")
   .description("make ghostty + herdr navigation feel native to macos")
-  .version("0.1.3");
+  .version("0.1.4");
 
 addSharedOptions(program.command("install").option("--uninstall", "remove managed changes instead of installing"))
   .description("run the guided installer")
