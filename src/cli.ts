@@ -13,17 +13,36 @@ const program = new Command();
 program
   .name("native-shortcuts-herd")
   .description("make ghostty + herdr navigation feel native to macos")
-  .version("0.1.2");
+  .version("0.1.3");
 
-addSharedOptions(program.command("install"))
+addSharedOptions(program.command("install").option("--uninstall", "remove managed changes instead of installing"))
   .description("run the guided installer")
   .action(async (options) => {
     await run(async () => {
+      if (options.uninstall) {
+        const result = options.dryRun ? diffRevert() : revertConfig(Boolean(options.dryRun));
+        outputResult("uninstalled native shortcuts", result, options);
+        return;
+      }
       const wizard = await promptForInstall(options);
       const choices = await promptForChoices(options);
-      options.installHerdr = wizard.installHerdr;
+      if (wizard.installHerdr !== undefined) options.installHerdr = wizard.installHerdr;
       const result = await applyConfig(toApplyRequest(choices, options));
       outputResult("installed native shortcuts", result, options);
+    }, options);
+  });
+
+program
+  .command("uninstall")
+  .alias("remove")
+  .description("remove managed ghostty/herdr changes")
+  .option("--dry-run", "preview the uninstall without writing")
+  .option("--yes", "run without prompts")
+  .option("--json", "print machine-readable json")
+  .action(async (options) => {
+    await run(async () => {
+      const result = options.dryRun ? diffRevert() : revertConfig(Boolean(options.dryRun));
+      outputResult("uninstalled native shortcuts", result, options);
     }, options);
   });
 
@@ -97,7 +116,7 @@ program
         "#!/usr/bin/env sh",
         "set -eu",
         "command -v npm >/dev/null 2>&1 || { echo 'npm is required' >&2; exit 127; }",
-        "npx --yes native-shortcuts-herd install"
+        "npx --yes native-shortcuts-herd install --yes \"$@\""
       ].join("\n");
       if (options.json) jsonOk({ script });
       else process.stdout.write(`${script}\n`);
@@ -124,6 +143,8 @@ function addSharedOptions(command: Command): Command {
     .option("--herdr-key <action=key...>", "extra managed herdr [keys] binding", collect, [])
     .option("--skip-ghostty", "do not patch ghostty")
     .option("--skip-herdr", "do not patch herdr")
+    .option("--install-herdr", "install/update herdr if missing or outdated without prompting")
+    .option("--no-install-herdr", "never install/update herdr")
     .option("--skip-herdr-install", "do not offer automatic herdr install/update")
     .option("--no-reload", "write config but skip live reload attempts")
     .option("--dry-run", "preview without writing")
@@ -201,16 +222,12 @@ async function promptForChoices(options: Record<string, unknown>): Promise<Short
   };
 }
 
-async function promptForInstall(options: Record<string, unknown>): Promise<{ installHerdr: boolean }> {
-  if (
-    options.yes ||
-    options.dryRun ||
-    options.skipHerdr ||
-    options.skipHerdrInstall ||
-    !process.stdin.isTTY
-  ) {
+async function promptForInstall(options: Record<string, unknown>): Promise<{ installHerdr?: boolean }> {
+  if (options.installHerdr === true) return { installHerdr: true };
+  if (options.installHerdr === false || options.skipHerdrInstall) {
     return { installHerdr: false };
   }
+  if (options.yes || options.dryRun || options.skipHerdr || !process.stdin.isTTY) return {};
 
   const herdr = detectHerdr();
   if (herdr.ok) return { installHerdr: false };
@@ -253,7 +270,7 @@ function toApplyRequest(choices: ShortcutChoices, options: Record<string, unknow
     ghosttyConfigPaths: options.ghosttyConfig as string[] | undefined,
     skipGhostty: Boolean(options.skipGhostty),
     skipHerdr: Boolean(options.skipHerdr),
-    skipHerdrInstall: Boolean(options.skipHerdrInstall),
+    skipHerdrInstall: Boolean(options.skipHerdrInstall || options.installHerdr === false),
     noReload: options.reload === false
   };
 }

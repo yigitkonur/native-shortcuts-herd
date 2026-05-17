@@ -21,10 +21,10 @@ import {
   planHerdrRevert,
   reloadHerdr
 } from "./herdr.js";
-import { readState, writeState } from "./state.js";
+import { deleteState, readState, writeState } from "./state.js";
 import type { ApplyRequest, Change, CommandResult, ManagedState, ShortcutChoices } from "./types.js";
 
-const packageVersion = "0.1.2";
+const packageVersion = "0.1.3";
 
 export async function applyConfig(request: ApplyRequest): Promise<CommandResult> {
   const generated = generateConfig(request.choices);
@@ -39,9 +39,15 @@ export async function applyConfig(request: ApplyRequest): Promise<CommandResult>
       const message = herdr.path
         ? `herdr ${herdr.version ?? "unknown"} found, ${minimumHerdrVersion}+ recommended`
         : "herdr not found";
-      if (!request.skipHerdrInstall && (request.yes || request.installHerdr) && !request.dryRun) {
-        const installed = await installOrUpdateHerdr();
-        warnings.push(`${message}; installed ${installed}`);
+      if (!request.skipHerdrInstall && (request.yes || request.installHerdr)) {
+        if (request.dryRun) {
+          warnings.push(`${message}; would install/update herdr without --dry-run`);
+        } else {
+          const installed = await installOrUpdateHerdr();
+          warnings.push(`${message}; installed ${installed}`);
+        }
+      } else if (request.skipHerdrInstall) {
+        warnings.push(`${message}; skipped herdr install by request`);
       } else {
         warnings.push(`${message}; rerun install and accept the herdr install prompt, or use --yes`);
       }
@@ -104,6 +110,7 @@ export function revertConfig(dryRun: boolean): CommandResult {
     ...applyGhosttyRevert(configPaths, dryRun),
     ...applyHerdrRevert(previousValues, dryRun)
   ];
+  if (!dryRun) deleteState();
   return {
     changes,
     warnings: state ? [] : ["no state file found; removed only discoverable managed ghostty include and sidecar"]

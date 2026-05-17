@@ -20,6 +20,13 @@ the installer is reusable. run it again any time to switch profiles, change what
 
 if herdr is missing or too old, the wizard offers to install/update it into `~/.local/bin/herdr` before writing the keymap. non-interactive runs can use `--yes` for the same behavior.
 
+fully scripted install and uninstall are supported too:
+
+```sh
+npx native-shortcuts-herd install --yes --install-herdr --glass-theme
+npx native-shortcuts-herd uninstall --yes
+```
+
 ## why this exists
 
 terminal power users already know how to build custom keymaps. the problem is that every terminal, multiplexer, and tui app has its own idea of what "tab", "space", and "pane" means.
@@ -48,7 +55,7 @@ ghostty already has excellent keybinding support. herdr already has workspaces, 
 | herdr installer | prompts to install/update herdr when it is missing or below `0.5.10` |
 | state | stores install state in `~/.config/native-shortcuts-herd/state.json` |
 | backups | creates timestamped backups before writing |
-| revert | removes the ghostty sidecar/include and restores tracked herdr values |
+| uninstall | removes the ghostty sidecar/include, restores tracked herdr values, and clears managed state |
 
 ## keybindings
 
@@ -119,11 +126,15 @@ herdr v0.5.10 added the pieces that make this clean: indexed keybind families an
 | command | use it when |
 |---|---|
 | `npx native-shortcuts-herd install` | guided setup, best first run |
+| `npx native-shortcuts-herd install --yes --install-herdr --glass-theme` | full non-interactive install |
+| `npx native-shortcuts-herd install --uninstall --yes` | uninstall through the same install entrypoint |
 | `npx native-shortcuts-herd apply --profile chrome-spaces --yes` | repeatable non-interactive setup |
+| `npx native-shortcuts-herd apply --no-install-herdr --yes` | apply config without downloading herdr |
 | `npx native-shortcuts-herd apply --glass-theme --yes` | apply shortcuts plus the purple glass preset |
 | `npx native-shortcuts-herd diff` | inspect changes before writing |
 | `npx native-shortcuts-herd doctor` | see detected ghostty/herdr state |
-| `npx native-shortcuts-herd revert` | remove managed changes |
+| `npx native-shortcuts-herd uninstall --yes` | remove managed changes without prompts |
+| `npx native-shortcuts-herd revert` | alias-style legacy removal command |
 | `npx native-shortcuts-herd profiles` | list built-in profiles |
 | `npx native-shortcuts-herd generate-installer` | print a tiny shell installer |
 
@@ -135,7 +146,8 @@ herdr v0.5.10 added the pieces that make this clean: indexed keybind families an
 | cmux ghostty config | supported | detected when the config file exists |
 | herdr 0.5.10+ | supported | required for indexed jumps |
 | re-running installer | supported | updates managed files idempotently |
-| uninstall/revert | supported | uses saved state and best-effort cleanup |
+| uninstall/revert | supported | uses saved state, best-effort cleanup, and clears managed state |
+| scripted automation | supported | use `--yes`, `--install-herdr`, `--no-install-herdr`, `--uninstall`, and `--json` |
 | custom keymaps | supported | use profile choices and `--ghostty-key` / `--herdr-key` |
 | linux ghostty | best effort | key routing may vary by desktop environment |
 | windows | not supported | ghostty/herdr target here is macos-first |
@@ -146,6 +158,12 @@ chrome-ish spaces:
 
 ```sh
 npx native-shortcuts-herd apply --profile chrome-spaces --yes
+```
+
+scripted install, including herdr and glass:
+
+```sh
+npx native-shortcuts-herd install --yes --install-herdr --glass-theme
 ```
 
 literal chrome tabs:
@@ -187,7 +205,13 @@ npx native-shortcuts-herd diff --profile chrome-spaces
 revert:
 
 ```sh
-npx native-shortcuts-herd revert
+npx native-shortcuts-herd uninstall --yes
+```
+
+uninstall through the installer entrypoint:
+
+```sh
+npx native-shortcuts-herd install --uninstall --yes
 ```
 
 ## safety model
@@ -198,7 +222,7 @@ this package is intentionally boring about file writes.
 |---|---|
 | sidecar include | ghostty gets one include; owned keybinds live elsewhere |
 | backups | files are copied before writes |
-| state file | previous herdr values are tracked for revert |
+| state file | previous herdr values are tracked for uninstall, then removed |
 | dry run | `diff` and `--dry-run` show planned changes first |
 | validation | ghostty config validation runs when the binary is available |
 | reload | herdr reload is attempted when a server is running |
