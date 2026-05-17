@@ -2,36 +2,47 @@
 
 make ghostty navigation feel like a real macos app.
 
-ghostty is fast, powerful, and beautifully native. but if your hands come from chrome, safari, arc, iterm, warp, or cmux-style workflows, the default terminal navigation can still feel a little off. tabs, spaces, split contexts, and terminal multiplexers all speak different shortcut languages.
+ghostty is fast, native, and powerful. herdr gives you workspaces, tabs, panes, and direct indexed jumps. the missing piece is the hand feel: `cmd+t`, `cmd+w`, `cmd+1..9`, `ctrl+tab`, and chrome-style tab cycling should work without thinking about terminal escape sequences.
 
-`native-shortcuts-herd` fixes that by wiring ghostty and herdr together with familiar macos/chrome-style shortcuts, without rewriting your existing config.
+`native-shortcuts-herd` wires ghostty and herdr together with a safe, reusable installer so terminal navigation feels familiar for macos users coming from chrome, safari, arc, iterm, warp, or cmux-style workflows.
 
-<video src="./docs/assets/native-shortcuts-herd-demo.mp4" controls width="100%"></video>
+<video src="https://raw.githubusercontent.com/yigitkonur/native-shortcuts-herd/main/docs/assets/native-shortcuts-herd-demo.mp4" controls width="100%"></video>
 
-> demo file: `docs/assets/native-shortcuts-herd-demo.mp4`
+> demo: `docs/assets/native-shortcuts-herd-demo.mp4`
 
-## install
+## quick start
 
-```sh
-npx native-shortcuts-herd install
-```
-
-the installer is reusable. run it again any time to switch profiles, change what `cmd+1..9` targets, update mappings, repair config drift, or revert cleanly.
-
-if herdr is missing or too old, the wizard offers to install/update it into `~/.local/bin/herdr` before writing the keymap. non-interactive runs can use `--yes` for the same behavior.
-
-fully scripted install and uninstall are supported too:
+guided setup:
 
 ```sh
-npx native-shortcuts-herd install --yes --install-herdr --glass-theme
-npx native-shortcuts-herd uninstall --yes
+npx native-shortcuts-herd@latest install
 ```
+
+fully scripted setup:
+
+```sh
+npx native-shortcuts-herd@latest install --yes --install-herdr --glass-theme
+```
+
+fully scripted uninstall:
+
+```sh
+npx native-shortcuts-herd@latest uninstall --yes
+```
+
+same uninstall through the installer entrypoint:
+
+```sh
+npx native-shortcuts-herd@latest install --uninstall --yes
+```
+
+the installer is intentionally reusable. run it again to change profiles, retarget `cmd+1..9`, repair config drift, update the glass preset, or remove every managed change.
 
 ## why this exists
 
-terminal power users already know how to build custom keymaps. the problem is that every terminal, multiplexer, and tui app has its own idea of what "tab", "space", and "pane" means.
+terminal power users can always hand-roll keymaps. the problem is that terminals, multiplexers, and tui apps disagree on what a tab, space, workspace, split, pane, or session should mean.
 
-macos users expect this:
+macos users expect this kind of muscle memory:
 
 | habit | expected feel |
 |---|---|
@@ -42,59 +53,162 @@ macos users expect this:
 | `ctrl+tab` | cycle through the main contexts |
 | `ctrl+option+tab` | cycle through the secondary contexts |
 
-ghostty already has excellent keybinding support. herdr already has workspaces, tabs, panes, direct keybindings, and indexed jumps. this package connects the two in a safe, repeatable way.
+ghostty already has excellent keybinding support. herdr already has the right model. this package connects them without taking over your whole config.
 
-## what it does
+## what gets changed
 
 | system | change |
 |---|---|
-| ghostty | adds one managed `config-file` include to your existing config |
-| ghostty sidecar | writes only owned keybind routes into `~/.config/native-shortcuts-herd/ghostty.conf` |
+| ghostty | adds one managed `config-file` include to each detected ghostty/cmux config |
+| ghostty sidecar | writes owned key routes to `~/.config/native-shortcuts-herd/ghostty.conf` |
 | optional glass preset | adds a purple catppuccin + macos liquid-glass visual layer when you opt in |
 | herdr | updates `[keys]`, `[keys.indexed]`, and `ui.prompt_new_tab_name` |
-| herdr installer | prompts to install/update herdr when it is missing or below `0.5.10` |
-| state | stores install state in `~/.config/native-shortcuts-herd/state.json` |
+| herdr installer | can install or update herdr into `~/.local/bin/herdr` when missing or below `0.5.10` |
+| state | stores previous herdr values in `~/.config/native-shortcuts-herd/state.json` |
 | backups | creates timestamped backups before writing |
-| uninstall | removes the ghostty sidecar/include, restores tracked herdr values, and clears managed state |
+| uninstall | removes the ghostty include/sidecar, restores tracked herdr values, and clears managed state |
 
 ## keybindings
 
-the installer lets you choose what the ambiguous families target. nothing is hardcoded forever.
+the default profile is `chrome-spaces`: command keys target herdr workspaces/spaces, while `ctrl+option+tab` cycles herdr tabs. every ambiguous family can be changed.
 
-| shortcut | default profile behavior | configurable |
+| shortcut | default behavior | configurable |
 |---|---|---|
 | `cmd+t` | new herdr tab | yes |
 | `cmd+n` | new herdr workspace / space | yes |
 | `cmd+w` | close active herdr tab | yes |
 | `cmd+k` | rename active herdr workspace | yes |
 | `cmd+l` | rename active herdr tab | yes |
-| `cmd+1..9` | wizard-selected: spaces, tabs, or off | yes |
-| `ctrl+tab` | wizard-selected: spaces, tabs, or off | yes |
-| `ctrl+shift+tab` | previous item for `ctrl+tab` target | yes |
-| `ctrl+option+tab` | wizard-selected: tabs, spaces, or off | yes |
-| `ctrl+option+shift+tab` | previous item for `ctrl+option+tab` target | yes |
+| `cmd+1..9` | jump to herdr workspace 1-9 | yes: spaces, tabs, off |
+| `ctrl+tab` | next herdr workspace | yes: spaces, tabs, off |
+| `ctrl+shift+tab` | previous herdr workspace | yes: spaces, tabs, off |
+| `ctrl+option+tab` | next herdr tab | yes: tabs, spaces, off |
+| `ctrl+option+shift+tab` | previous herdr tab | yes: tabs, spaces, off |
 
 ## ghostty behavior mappings
 
-ghostty receives macos keys first. this tool routes them into terminal sequences that herdr can understand.
+ghostty receives macos shortcuts first. this package routes those keys into sequences herdr understands.
 
-| ghostty trigger | managed action | herdr receives |
+| ghostty trigger | managed ghostty action | herdr receives |
 |---|---|---|
-| `cmd+key_t` | `text:\x02t` | prefix + `t` |
-| `cmd+key_n` | `text:\x02n` | prefix + `n` |
-| `cmd+key_w` | `text:\x02W` | prefix + `shift+w` |
-| `cmd+key_k` | `text:\x02N` | prefix + `shift+n` |
-| `cmd+key_l` | `text:\x02T` | prefix + `shift+t` |
+| `cmd+KeyT` | `text:\x02t` | prefix + `t` |
+| `cmd+KeyN` | `text:\x02n` | prefix + `n` |
+| `cmd+KeyW` | `text:\x02W` | prefix + `shift+w` |
+| `cmd+KeyK` | `text:\x02N` | prefix + `shift+n` |
+| `cmd+KeyL` | `text:\x02T` | prefix + `shift+t` |
 | `ctrl+tab` | `text:\x1b[9;5u` | enhanced `ctrl+tab` |
 | `ctrl+shift+tab` | `text:\x1b[9;6u` | enhanced `ctrl+shift+tab` |
 | `ctrl+option+tab` | `text:\x1b[9;7u` | enhanced `ctrl+alt+tab` |
+| `ctrl+option+shift+tab` | `text:\x1b[9;8u` | enhanced `ctrl+alt+shift+tab` |
 | `cmd+1..9` | generated per profile | indexed herdr jump |
 
-for macos menu conflicts like `cmd+w`, ghostty gets both a physical-key route and a normal `cmd+w=unbind`, so the terminal app does not close the window before herdr sees the intended action.
+for macos menu conflicts such as `cmd+w`, ghostty gets a physical-key route plus a normal `cmd+w=unbind`. that lets herdr receive the intended action instead of ghostty closing the whole window.
+
+## herdr integration
+
+herdr `0.5.10+` added the clean pieces this project uses: indexed keybind families and instant generated tab names.
+
+| herdr config | purpose |
+|---|---|
+| `[keys].prefix` | keeps the herdr prefix at `ctrl+b` |
+| `[keys].new_workspace` | target for `cmd+n` |
+| `[keys].rename_workspace` | target for `cmd+k` |
+| `[keys].new_tab` | target for `cmd+t` |
+| `[keys].rename_tab` | target for `cmd+l` |
+| `[keys].close_tab` | target for `cmd+w` |
+| `[keys].previous_workspace` / `next_workspace` | direct workspace cycling |
+| `[keys].previous_tab` / `next_tab` | direct tab cycling |
+| `[keys.indexed].workspaces` | direct workspace jumps 1-9 |
+| `[keys.indexed].tabs` | direct tab jumps 1-9 |
+| `[ui].prompt_new_tab_name` | defaults to `false` for instant tab creation |
+
+## install behavior
+
+| command | use it when |
+|---|---|
+| `npx native-shortcuts-herd@latest install` | guided first run |
+| `npx native-shortcuts-herd@latest install --yes` | non-interactive install with safe defaults |
+| `npx native-shortcuts-herd@latest install --yes --install-herdr` | non-interactive install and install/update herdr if needed |
+| `npx native-shortcuts-herd@latest install --yes --no-install-herdr` | non-interactive install without downloading herdr |
+| `npx native-shortcuts-herd@latest install --yes --glass-theme` | install shortcuts plus the glass preset |
+| `npx native-shortcuts-herd@latest install --uninstall --yes` | uninstall through the install command |
+| `npx native-shortcuts-herd@latest uninstall --yes` | remove managed changes without prompts |
+| `npx native-shortcuts-herd@latest uninstall --dry-run --json` | machine-readable uninstall preview |
+| `npx native-shortcuts-herd@latest apply --profile chrome-tabs --yes` | repeatable profile application |
+| `npx native-shortcuts-herd@latest diff --profile chrome-spaces` | inspect planned writes |
+| `npx native-shortcuts-herd@latest doctor --json` | inspect ghostty, herdr, and state |
+| `npx native-shortcuts-herd@latest generate-installer` | print a tiny shell installer |
+
+## herdr install options
+
+| flag | behavior |
+|---|---|
+| no flag in guided mode | prompt to install/update herdr when needed |
+| `--yes` | allow herdr install/update without prompts |
+| `--install-herdr` | explicitly install/update herdr when needed |
+| `--no-install-herdr` | never download herdr |
+| `--skip-herdr-install` | legacy spelling for not offering automatic install/update |
+| `--skip-herdr` | do not write herdr config at all |
+
+automatic herdr install downloads the latest matching release asset from `ogulcancelik/herdr` into `~/.local/bin/herdr`. if the release asset exposes a sha256 digest, the binary is verified before it is written.
+
+## profiles
+
+| profile | `cmd+1..9` | `ctrl+tab` | `ctrl+option+tab` | best for |
+|---|---|---|---|---|
+| `chrome-spaces` | workspaces | workspaces | tabs | cmux-like spaces with browser-ish secondary tab cycling |
+| `chrome-tabs` | tabs | tabs | workspaces | literal chrome tab muscle memory |
+| `minimal` | off | workspaces | tabs | keep core shortcuts, skip indexed jumps |
+
+## customization
+
+change the target families:
+
+```sh
+npx native-shortcuts-herd@latest apply \
+  --cmd-numbers tabs \
+  --ctrl-tab tabs \
+  --ctrl-opt-tab workspaces \
+  --yes
+```
+
+turn off indexed jumps:
+
+```sh
+npx native-shortcuts-herd@latest apply \
+  --cmd-numbers off \
+  --ctrl-tab workspaces \
+  --ctrl-opt-tab tabs \
+  --yes
+```
+
+add a ghostty route:
+
+```sh
+npx native-shortcuts-herd@latest apply \
+  --ghostty-key 'cmd+slash=text:\x02?' \
+  --yes
+```
+
+add a herdr action:
+
+```sh
+npx native-shortcuts-herd@latest apply \
+  --herdr-key reload_config=shift+r \
+  --yes
+```
+
+patch one config explicitly:
+
+```sh
+npx native-shortcuts-herd@latest apply \
+  --ghostty-config ~/.config/ghostty/config \
+  --yes
+```
 
 ## purple glass preset
 
-the wizard can optionally add a visual preset inspired by a polished macos ghostty setup: catppuccin mocha colors, display-p3/native blending, transparent titlebar, `macos-glass-regular`, subtle split dimming, and retina-friendly jetbrains mono thickening.
+the glass preset is opt-in. it gives ghostty a richer macos look without making it the default behavior.
 
 | setting family | managed values |
 |---|---|
@@ -104,39 +218,17 @@ the wizard can optionally add a visual preset inspired by a polished macos ghost
 | typography | `JetBrains Mono`, 16pt, ligatures, light macos thickening |
 | layout | 16x12 padding, balanced padding, dimmed unfocused splits |
 
-it is opt-in. use the wizard prompt, `--glass-theme`, or `--no-glass-theme`.
+apply it:
 
-## herdr integration
+```sh
+npx native-shortcuts-herd@latest apply --glass-theme --yes
+```
 
-herdr v0.5.10 added the pieces that make this clean: indexed keybind families and instant generated tab names.
+remove only the package-managed include and state:
 
-| herdr config | purpose |
-|---|---|
-| `[keys].new_workspace` | target for `cmd+n` |
-| `[keys].new_tab` | target for `cmd+t` |
-| `[keys].close_tab` | target for `cmd+w` |
-| `[keys].previous_workspace` / `next_workspace` | direct cycle shortcuts |
-| `[keys].previous_tab` / `next_tab` | direct tab cycle shortcuts |
-| `[keys.indexed].workspaces` | direct workspace jumps 1-9 |
-| `[keys.indexed].tabs` | direct tab jumps 1-9 |
-| `[ui].prompt_new_tab_name` | set to `false` for instant tab creation |
-
-## install options
-
-| command | use it when |
-|---|---|
-| `npx native-shortcuts-herd install` | guided setup, best first run |
-| `npx native-shortcuts-herd install --yes --install-herdr --glass-theme` | full non-interactive install |
-| `npx native-shortcuts-herd install --uninstall --yes` | uninstall through the same install entrypoint |
-| `npx native-shortcuts-herd apply --profile chrome-spaces --yes` | repeatable non-interactive setup |
-| `npx native-shortcuts-herd apply --no-install-herdr --yes` | apply config without downloading herdr |
-| `npx native-shortcuts-herd apply --glass-theme --yes` | apply shortcuts plus the purple glass preset |
-| `npx native-shortcuts-herd diff` | inspect changes before writing |
-| `npx native-shortcuts-herd doctor` | see detected ghostty/herdr state |
-| `npx native-shortcuts-herd uninstall --yes` | remove managed changes without prompts |
-| `npx native-shortcuts-herd revert` | alias-style legacy removal command |
-| `npx native-shortcuts-herd profiles` | list built-in profiles |
-| `npx native-shortcuts-herd generate-installer` | print a tiny shell installer |
+```sh
+npx native-shortcuts-herd@latest uninstall --yes
+```
 
 ## supported workflows
 
@@ -144,75 +236,13 @@ herdr v0.5.10 added the pieces that make this clean: indexed keybind families an
 |---|---|---|
 | ghostty on macos | supported | primary target |
 | cmux ghostty config | supported | detected when the config file exists |
-| herdr 0.5.10+ | supported | required for indexed jumps |
+| herdr `0.5.10+` | supported | required for indexed jumps |
 | re-running installer | supported | updates managed files idempotently |
-| uninstall/revert | supported | uses saved state, best-effort cleanup, and clears managed state |
+| uninstall/reinstall | supported | uses saved state, best-effort cleanup, and clears managed state |
 | scripted automation | supported | use `--yes`, `--install-herdr`, `--no-install-herdr`, `--uninstall`, and `--json` |
 | custom keymaps | supported | use profile choices and `--ghostty-key` / `--herdr-key` |
-| linux ghostty | best effort | key routing may vary by desktop environment |
-| windows | not supported | ghostty/herdr target here is macos-first |
-
-## examples
-
-chrome-ish spaces:
-
-```sh
-npx native-shortcuts-herd apply --profile chrome-spaces --yes
-```
-
-scripted install, including herdr and glass:
-
-```sh
-npx native-shortcuts-herd install --yes --install-herdr --glass-theme
-```
-
-literal chrome tabs:
-
-```sh
-npx native-shortcuts-herd apply --profile chrome-tabs --yes
-```
-
-turn off indexed `cmd+1..9` but keep cycling:
-
-```sh
-npx native-shortcuts-herd apply --cmd-numbers off --ctrl-tab workspaces --ctrl-opt-tab tabs --yes
-```
-
-add a custom herdr action:
-
-```sh
-npx native-shortcuts-herd apply --herdr-key reload_config=shift+r --yes
-```
-
-patch a specific ghostty config:
-
-```sh
-npx native-shortcuts-herd apply --ghostty-config ~/.config/ghostty/config --yes
-```
-
-apply the purple glass look:
-
-```sh
-npx native-shortcuts-herd apply --glass-theme --yes
-```
-
-preview everything:
-
-```sh
-npx native-shortcuts-herd diff --profile chrome-spaces
-```
-
-revert:
-
-```sh
-npx native-shortcuts-herd uninstall --yes
-```
-
-uninstall through the installer entrypoint:
-
-```sh
-npx native-shortcuts-herd install --uninstall --yes
-```
+| linux ghostty | best effort | key routing and global shortcuts vary by desktop environment |
+| windows | not supported | this project is macos-first |
 
 ## safety model
 
@@ -220,13 +250,27 @@ this package is intentionally boring about file writes.
 
 | safety feature | behavior |
 |---|---|
-| sidecar include | ghostty gets one include; owned keybinds live elsewhere |
+| sidecar include | ghostty gets one include; owned lines live in a separate file |
 | backups | files are copied before writes |
-| state file | previous herdr values are tracked for uninstall, then removed |
-| dry run | `diff` and `--dry-run` show planned changes first |
+| state file | previous herdr values are tracked for uninstall |
+| dry run | `diff` and `--dry-run` preview planned changes |
+| json output | `--json` writes machine-readable output to stdout |
 | validation | ghostty config validation runs when the binary is available |
 | reload | herdr reload is attempted when a server is running |
 | no secret handling | npm/github tokens are never written into config |
+
+uninstall only removes package-owned config. it does not delete manually written ghostty keybinds, custom shaders, or theme settings that already live in your main config files.
+
+## troubleshooting
+
+| symptom | check |
+|---|---|
+| ghostty still uses the old keymap | run `cmd+shift+,` in ghostty or restart ghostty |
+| herdr shortcuts do not react | run `herdr --version` and make sure it is `0.5.10+` |
+| `cmd+w` closes the window | run `native-shortcuts-herd doctor --json` and confirm the ghostty sidecar exists |
+| install should not download herdr | use `--no-install-herdr` |
+| automation needs stable output | add `--json` |
+| you want to inspect first | run `diff` or add `--dry-run` |
 
 ## development
 
