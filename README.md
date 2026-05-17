@@ -43,6 +43,7 @@ ghostty already has excellent keybinding support. herdr already has workspaces, 
 |---|---|
 | ghostty | adds one managed `config-file` include to your existing config |
 | ghostty sidecar | writes only owned keybind routes into `~/.config/native-shortcuts-herd/ghostty.conf` |
+| optional glass preset | adds a purple catppuccin + macos liquid-glass visual layer when you opt in |
 | herdr | updates `[keys]`, `[keys.indexed]`, and `ui.prompt_new_tab_name` |
 | herdr installer | prompts to install/update herdr when it is missing or below `0.5.10` |
 | state | stores install state in `~/.config/native-shortcuts-herd/state.json` |
@@ -84,6 +85,20 @@ ghostty receives macos keys first. this tool routes them into terminal sequences
 
 for macos menu conflicts like `cmd+w`, ghostty gets both a physical-key route and a normal `cmd+w=unbind`, so the terminal app does not close the window before herdr sees the intended action.
 
+## purple glass preset
+
+the wizard can optionally add a visual preset inspired by a polished macos ghostty setup: catppuccin mocha colors, display-p3/native blending, transparent titlebar, `macos-glass-regular`, subtle split dimming, and retina-friendly jetbrains mono thickening.
+
+| setting family | managed values |
+|---|---|
+| color | `theme = Catppuccin Mocha`, purple mocha background, matching cursor and selection |
+| glass | `background-opacity = 0.85`, `background-blur = macos-glass-regular`, transparent titlebar |
+| rendering | `window-colorspace = display-p3`, `alpha-blending = native`, `window-vsync = true` |
+| typography | `JetBrains Mono`, 16pt, ligatures, light macos thickening |
+| layout | 16x12 padding, balanced padding, dimmed unfocused splits |
+
+it is opt-in. use the wizard prompt, `--glass-theme`, or `--no-glass-theme`.
+
 ## herdr integration
 
 herdr v0.5.10 added the pieces that make this clean: indexed keybind families and instant generated tab names.
@@ -105,6 +120,7 @@ herdr v0.5.10 added the pieces that make this clean: indexed keybind families an
 |---|---|
 | `npx native-shortcuts-herd install` | guided setup, best first run |
 | `npx native-shortcuts-herd apply --profile chrome-spaces --yes` | repeatable non-interactive setup |
+| `npx native-shortcuts-herd apply --glass-theme --yes` | apply shortcuts plus the purple glass preset |
 | `npx native-shortcuts-herd diff` | inspect changes before writing |
 | `npx native-shortcuts-herd doctor` | see detected ghostty/herdr state |
 | `npx native-shortcuts-herd revert` | remove managed changes |
@@ -154,6 +170,12 @@ patch a specific ghostty config:
 
 ```sh
 npx native-shortcuts-herd apply --ghostty-config ~/.config/ghostty/config --yes
+```
+
+apply the purple glass look:
+
+```sh
+npx native-shortcuts-herd apply --glass-theme --yes
 ```
 
 preview everything:

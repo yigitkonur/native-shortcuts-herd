@@ -1,6 +1,6 @@
 {
   "name": "native-shortcuts-herd",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "make ghostty + herdr navigation feel native to macos and chrome-style tab workflows",
   "type": "module",
   "bin": {

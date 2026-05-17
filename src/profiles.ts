@@ -16,7 +16,8 @@ export const profiles: ShortcutProfile[] = [
     ctrlTab: "workspaces",
     ctrlOptTab: "tabs",
     includePrefixActions: true,
-    promptNewTabName: false
+    promptNewTabName: false,
+    applyGlassTheme: false
   },
   {
     id: "chrome-tabs",
@@ -26,7 +27,8 @@ export const profiles: ShortcutProfile[] = [
     ctrlTab: "tabs",
     ctrlOptTab: "workspaces",
     includePrefixActions: true,
-    promptNewTabName: false
+    promptNewTabName: false,
+    applyGlassTheme: false
   },
   {
     id: "minimal",
@@ -36,7 +38,8 @@ export const profiles: ShortcutProfile[] = [
     ctrlTab: "workspaces",
     ctrlOptTab: "tabs",
     includePrefixActions: true,
-    promptNewTabName: false
+    promptNewTabName: false,
+    applyGlassTheme: false
   }
 ];
 
@@ -59,6 +62,7 @@ export function choicesFromOptions(options: {
   ctrlTab?: string;
   ctrlOptTab?: string;
   promptNewTabName?: boolean;
+  glassTheme?: boolean;
   ghosttyKey?: string[];
   herdrKey?: string[];
 }): ShortcutChoices {
@@ -69,6 +73,7 @@ export function choicesFromOptions(options: {
     ctrlTab: targetFrom(options.ctrlTab, profile.ctrlTab),
     ctrlOptTab: targetFrom(options.ctrlOptTab, profile.ctrlOptTab),
     promptNewTabName: options.promptNewTabName ?? profile.promptNewTabName,
+    applyGlassTheme: options.glassTheme ?? profile.applyGlassTheme,
     extraGhosttyBindings: parseKeyValues(options.ghosttyKey ?? []),
     extraHerdrKeys: parseKeyValues(options.herdrKey ?? [])
   };
@@ -95,6 +100,7 @@ export function generateConfig(choices: ShortcutChoices): GeneratedConfig {
   ];
 
   addPrefixActionBindings(ghosttyLines);
+  if (choices.applyGlassTheme) addPurpleGlassTheme(ghosttyLines);
   const herdrValues: Record<string, string | boolean> = {
     "keys.prefix": "ctrl+b",
     "keys.new_workspace": "n",
@@ -119,6 +125,45 @@ export function generateConfig(choices: ShortcutChoices): GeneratedConfig {
 
   ghosttyLines.push("");
   return { choices, ghosttyLines, herdrValues };
+}
+
+function addPurpleGlassTheme(lines: string[]): void {
+  lines.push(
+    "# purple liquid glass ghostty theme",
+    "font-family = JetBrains Mono",
+    "font-size = 16",
+    "font-thicken = true",
+    "font-thicken-strength = 64",
+    "font-feature = calt",
+    "font-feature = liga",
+    "theme = Catppuccin Mocha",
+    "background = 1e1e2e",
+    "foreground = cdd6f4",
+    "cursor-color = f5e0dc",
+    "cursor-text = 1e1e2e",
+    "cursor-style = block",
+    "cursor-style-blink = true",
+    "cursor-opacity = 0.9",
+    "selection-background = 585b70",
+    "selection-foreground = cdd6f4",
+    "background-opacity = 0.85",
+    "background-opacity-cells = true",
+    "background-blur = macos-glass-regular",
+    "window-colorspace = display-p3",
+    "alpha-blending = native",
+    "window-vsync = true",
+    "macos-titlebar-style = transparent",
+    "macos-titlebar-proxy-icon = hidden",
+    "macos-icon = glass",
+    "window-padding-x = 16",
+    "window-padding-y = 12",
+    "window-padding-balance = true",
+    "window-padding-color = background",
+    "unfocused-split-opacity = 0.65",
+    "unfocused-split-fill = 181825",
+    "split-divider-color = 45475a",
+    ""
+  );
 }
 
 function addPrefixActionBindings(lines: string[]): void {

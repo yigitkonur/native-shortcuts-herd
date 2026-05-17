@@ -93,7 +93,13 @@ export function reloadHerdr(): string | null {
   const herdr = detectHerdr();
   if (!herdr.path) return "herdr binary not found; skipped reload";
   const result = runOptional(herdr.path, ["server", "reload-config"]);
-  if (!result.ok) return result.stderr.trim() || result.stdout.trim() || "herdr server not running; restart herdr to apply config";
+  if (!result.ok) {
+    const detail = `${result.stderr}\n${result.stdout}`.trim();
+    if (/connection refused/i.test(detail)) {
+      return "herdr server not running; restart herdr to apply config";
+    }
+    return detail || "herdr server not running; restart herdr to apply config";
+  }
   return null;
 }
 

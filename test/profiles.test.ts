@@ -29,4 +29,14 @@ describe("profile generation", () => {
     expect(generated.ghosttyLines).toContain("keybind = cmd+slash=text:\\x02?");
     expect(generated.herdrValues["keys.reload_config"]).toBe("shift+r");
   });
+
+  it("adds the purple glass preset only when requested", () => {
+    const plain = generateConfig(choicesFromOptions({ profile: "chrome-spaces" }));
+    const themed = generateConfig(choicesFromOptions({ profile: "chrome-spaces", glassTheme: true }));
+
+    expect(plain.ghosttyLines).not.toContain("background-blur = macos-glass-regular");
+    expect(themed.ghosttyLines).toContain("background-blur = macos-glass-regular");
+    expect(themed.ghosttyLines).toContain("theme = Catppuccin Mocha");
+    expect(themed.ghosttyLines).toContain("window-colorspace = display-p3");
+  });
 });

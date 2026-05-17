@@ -11,6 +11,7 @@ export interface ShortcutProfile {
   ctrlOptTab: ShortcutTarget;
   includePrefixActions: boolean;
   promptNewTabName: boolean;
+  applyGlassTheme: boolean;
 }
 
 export interface ShortcutChoices {
@@ -19,6 +20,7 @@ export interface ShortcutChoices {
   ctrlTab: ShortcutTarget;
   ctrlOptTab: ShortcutTarget;
   promptNewTabName: boolean;
+  applyGlassTheme: boolean;
   extraGhosttyBindings: KeyValue[];
   extraHerdrKeys: KeyValue[];
 }

@@ -13,7 +13,7 @@ const program = new Command();
 program
   .name("native-shortcuts-herd")
   .description("make ghostty + herdr navigation feel native to macos")
-  .version("0.1.1");
+  .version("0.1.2");
 
 addSharedOptions(program.command("install"))
   .description("run the guided installer")
@@ -117,6 +117,8 @@ function addSharedOptions(command: Command): Command {
     .option("--ctrl-tab <target>", "ctrl+tab target: workspaces, tabs, off")
     .option("--ctrl-opt-tab <target>", "ctrl+option+tab target: workspaces, tabs, off")
     .option("--prompt-new-tab-name", "keep herdr's new-tab rename prompt")
+    .option("--glass-theme", "apply the purple liquid glass ghostty preset")
+    .option("--no-glass-theme", "do not apply the purple liquid glass ghostty preset")
     .option("--ghostty-config <path...>", "specific ghostty config path(s)")
     .option("--ghostty-key <trigger=action...>", "extra managed ghostty keybind", collect, [])
     .option("--herdr-key <action=key...>", "extra managed herdr [keys] binding", collect, [])
@@ -176,6 +178,12 @@ async function promptForChoices(options: Record<string, unknown>): Promise<Short
         name: "promptNewTabName",
         message: "keep herdr's rename prompt when creating new tabs?",
         initial: false
+      },
+      {
+        type: "confirm",
+        name: "glassTheme",
+        message: "apply a purple liquid glass ghostty theme?",
+        initial: false
       }
     ],
     { onCancel: () => process.exit(130) }
@@ -188,7 +196,8 @@ async function promptForChoices(options: Record<string, unknown>): Promise<Short
     cmdNumbers: targetFrom(answers.cmdNumbers, selected.cmdNumbers),
     ctrlTab: targetFrom(answers.ctrlTab, selected.ctrlTab),
     ctrlOptTab: targetFrom(answers.ctrlOptTab, selected.ctrlOptTab),
-    promptNewTabName: Boolean(answers.promptNewTabName)
+    promptNewTabName: Boolean(answers.promptNewTabName),
+    applyGlassTheme: Boolean(answers.glassTheme)
   };
 }
 
