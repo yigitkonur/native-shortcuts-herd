@@ -24,6 +24,14 @@ fully scripted setup:
 npx native-shortcuts-herd@latest install --yes --install-herdr --glass-theme
 ```
 
+missing-herdr bootstrap:
+
+```sh
+npx native-shortcuts-herd@latest install --yes
+```
+
+if `herdr` is missing or older than `0.5.10`, the installer downloads the latest matching release into `~/.local/bin/herdr` before writing the keymap.
+
 fully scripted uninstall:
 
 ```sh
@@ -152,6 +160,34 @@ herdr `0.5.10+` added the clean pieces this project uses: indexed keybind famili
 
 automatic herdr install downloads the latest matching release asset from `ogulcancelik/herdr` into `~/.local/bin/herdr`. if the release asset exposes a sha256 digest, the binary is verified before it is written.
 
+## herdr bootstrap check
+
+use this when you want to test or debug the setup flow before touching ghostty:
+
+```sh
+npx native-shortcuts-herd@latest doctor --json
+npx native-shortcuts-herd@latest install --yes --skip-ghostty --no-reload --dry-run --json
+npx native-shortcuts-herd@latest install --yes --skip-ghostty --no-reload --json
+herdr --version
+```
+
+what to expect:
+
+| state | expected result |
+|---|---|
+| herdr is missing | `doctor` reports `herdr.path: null` |
+| dry run with missing herdr | warning says it would install/update herdr |
+| real install with missing herdr | warning says it installed `~/.local/bin/herdr` |
+| install complete | `herdr --version` prints `herdr 0.5.10` or newer |
+
+package uninstall removes only package-managed ghostty/herdr config and state. it does not delete `~/.local/bin/herdr`, because herdr may be used independently.
+
+remove the herdr binary itself only if you intentionally want to test a missing-herdr machine:
+
+```sh
+rm -f ~/.local/bin/herdr
+```
+
 ## profiles
 
 | profile | `cmd+1..9` | `ctrl+tab` | `ctrl+option+tab` | best for |
@@ -267,6 +303,7 @@ uninstall only removes package-owned config. it does not delete manually written
 |---|---|
 | ghostty still uses the old keymap | run `cmd+shift+,` in ghostty or restart ghostty |
 | herdr shortcuts do not react | run `herdr --version` and make sure it is `0.5.10+` |
+| `doctor` reports `herdr.path: null` | run `npx native-shortcuts-herd@latest install --yes` to bootstrap herdr |
 | `cmd+w` closes the window | run `native-shortcuts-herd doctor --json` and confirm the ghostty sidecar exists |
 | install should not download herdr | use `--no-install-herdr` |
 | automation needs stable output | add `--json` |
