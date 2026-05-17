@@ -4,7 +4,7 @@
   "description": "make ghostty + herdr navigation feel native to macos and chrome-style tab workflows",
   "type": "module",
   "bin": {
-    "native-shortcuts-herd": "./dist/cli.js"
+    "native-shortcuts-herd": "dist/cli.js"
   },
   "files": [
     "dist",
