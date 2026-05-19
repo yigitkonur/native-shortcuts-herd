@@ -6,9 +6,8 @@ ghostty is fast, native, and powerful. herdr gives you workspaces, tabs, panes, 
 
 `native-shortcuts-herd` wires ghostty and herdr together with a safe, reusable installer so terminal navigation feels familiar for macos users coming from chrome, safari, arc, iterm, warp, or cmux-style workflows.
 
-<video src="https://raw.githubusercontent.com/yigitkonur/native-shortcuts-herd/main/docs/assets/native-shortcuts-herd-demo.mp4" controls width="100%"></video>
 
-> demo: `docs/assets/native-shortcuts-herd-demo.mp4`
+https://github.com/user-attachments/assets/190184bd-f8e5-4486-894a-297ce07533af
 
 ## quick start
 
